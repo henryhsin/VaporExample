@@ -17,5 +17,12 @@ drop.get("/view"){request in
     return try drop.view.make("view.html")
     
 }
+drop.get("/sex") { (request) in
+    guard let sex = request.data["sex"]?.string else{
+        throw Abort.badRequest
+    }
+    return "sex is \(sex)"
+
+}
 
 drop.run()
