@@ -1,6 +1,11 @@
 import Vapor
 import Foundation
+import VaporPostgreSQL
+
 let drop = Droplet()
+try drop.addProvider(VaporPostgreSQL.Provider.self)
+
+
 
 drop.get("hello") { request in
         return "Hello, world!"
@@ -47,6 +52,16 @@ drop.get("version") { request in
     ])
 }
 
+
+drop.get("dbversion"){request in
+    if let db = drop.database?.driver as? PostgreSQLDriver{
+        let version = try db.raw("SELECT version()")
+        return try JSON(node: version)
+    }
+    return try JSON(node:["message": "No db connection."])
+}
+
+
 drop.get("word", String.self) { (req, word) in
     let session = URLSession.shared
     let wordUrlString: String = "https://owlbot.info/api/v1/dictionary/\(word)"
@@ -75,15 +90,21 @@ drop.get("word", String.self) { (req, word) in
             return
         }
         
+        
         for jsonDict in jsonArray{
-            guard let wordDict = jsonDict as? [String:String]else{
-              print("Error: wrong data type")
-                return
+            
+            if let wordDict = jsonDict as? [String: Any]{
+                print("\n \(word) \n")
+                let defenition = wordDict["defenition"] as? String ?? "no defenition"
+                let example = wordDict["example"] as? String ?? "no example"
+                let type = wordDict["type"] as? String ?? "no type"
+                print("definition : \(defenition)")
+                print("example : \(example)")
+                print("type : \(type)")
+            }else{
+                print("Error: wrong data type")
             }
-            print("\n \(word) \n")
-            let defenition = wordDict["defenition"] ?? "no defenition"
-            let example = wordDict["example"] ?? "no example"
-            let type = wordDict["type"] ?? "no type"
+           
         }
     }
     
@@ -91,7 +112,7 @@ drop.get("word", String.self) { (req, word) in
     session.finishTasksAndInvalidate()
     
     return try JSON(node: [
-        "new word" : word
+        "new word" : word,
         ])
 }
 
