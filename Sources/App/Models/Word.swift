@@ -28,7 +28,7 @@ final class Word: Model{
     func makeNode(context: Context) throws -> Node {
         return try Node(node: [
             "id": id,
-            "word": word
+            "word": word,
             ])
     }
     
